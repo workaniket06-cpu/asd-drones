@@ -1,14 +1,9 @@
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { ReactNode } from "react";
-import { isAdminLoggedIn } from "@/lib/adminAuth";
-import { redirect } from "next/navigation";
 
 export const metadata = { title: "Admin – ASD Drones" };
 
-export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const loggedIn = await isAdminLoggedIn();
-  if (!loggedIn) redirect("/admin/login");
-
+export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 flex">
       <AdminSidebar />
