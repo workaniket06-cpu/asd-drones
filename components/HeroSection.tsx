@@ -1,8 +1,20 @@
 "use client";
 import Link from "next/link";
-import { ArrowRight, Shield, Truck, Headphones } from "lucide-react";
+import { ArrowRight, Shield, Truck, Headphones, Search } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (q) router.push(`/shop?search=${encodeURIComponent(q)}`);
+    else router.push("/shop");
+  }
+
   return (
     <section className="relative min-h-screen flex items-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 overflow-hidden pt-24">
       {/* Animated background grid */}
@@ -24,27 +36,21 @@ export default function HeroSection() {
       {/* Drone SVG illustration */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/2 hidden xl:flex items-center justify-center opacity-20">
         <svg viewBox="0 0 400 400" className="w-full max-w-lg" fill="none">
-          {/* Body */}
           <rect x="160" y="160" width="80" height="80" rx="12" fill="#3b82f6" />
-          {/* Arms */}
           <rect x="60" y="185" width="100" height="8" rx="4" fill="#475569" />
           <rect x="240" y="185" width="100" height="8" rx="4" fill="#475569" />
           <rect x="185" y="60" width="8" height="100" rx="4" fill="#475569" />
           <rect x="185" y="240" width="8" height="100" rx="4" fill="#475569" />
-          {/* Rotors */}
           <ellipse cx="80" cy="80" rx="50" ry="12" fill="#3b82f6" opacity="0.6" />
           <ellipse cx="320" cy="80" rx="50" ry="12" fill="#3b82f6" opacity="0.6" />
           <ellipse cx="80" cy="320" rx="50" ry="12" fill="#3b82f6" opacity="0.6" />
           <ellipse cx="320" cy="320" rx="50" ry="12" fill="#3b82f6" opacity="0.6" />
-          {/* Motor hubs */}
           <circle cx="80" cy="80" r="10" fill="#60a5fa" />
           <circle cx="320" cy="80" r="10" fill="#60a5fa" />
           <circle cx="80" cy="320" r="10" fill="#60a5fa" />
           <circle cx="320" cy="320" r="10" fill="#60a5fa" />
-          {/* Camera */}
           <circle cx="200" cy="220" r="14" fill="#1e40af" />
           <circle cx="200" cy="220" r="8" fill="#93c5fd" />
-          {/* LEDs */}
           <circle cx="175" cy="175" r="5" fill="#38bdf8" />
           <circle cx="225" cy="175" r="5" fill="#38bdf8" />
           <circle cx="175" cy="225" r="5" fill="#38bdf8" />
@@ -71,9 +77,42 @@ export default function HeroSection() {
             Flight
           </h1>
 
-          <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-lg">
-            Premium drone parts, FPV equipment, and electronics — everything you need to build, fly, and innovate. Genuine products, expert support, fast delivery.
+          <p className="text-lg text-slate-300 leading-relaxed mb-8 max-w-lg">
+            Premium drone parts, FPV equipment, and electronics — everything you need to build, fly, and innovate.
           </p>
+
+          {/* ── SEARCH BAR ── */}
+          <form onSubmit={handleSearch} className="flex items-center w-full max-w-lg bg-white rounded-2xl shadow-2xl shadow-blue-900/40 overflow-hidden mb-8 border-2 border-transparent focus-within:border-blue-400 transition-all">
+            <Search className="w-5 h-5 text-slate-400 ml-4 flex-shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search motors, frames, FPV cameras..."
+              className="flex-1 px-3 py-4 text-slate-800 placeholder-slate-400 text-sm sm:text-base outline-none bg-transparent"
+            />
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-4 text-sm sm:text-base transition-colors whitespace-nowrap"
+            >
+              Search
+            </button>
+          </form>
+
+          {/* Popular searches */}
+          <div className="flex flex-wrap items-center gap-2 mb-10">
+            <span className="text-slate-500 text-xs font-medium">Popular:</span>
+            {["Motors", "FPV Camera", "Flight Controller", "LiPo Battery", "Frames"].map(tag => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => router.push(`/shop?search=${encodeURIComponent(tag)}`)}
+                className="px-3 py-1 bg-white/10 hover:bg-white/20 text-slate-300 text-xs rounded-full border border-white/15 transition-colors"
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 mb-14">
