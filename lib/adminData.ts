@@ -1,8 +1,7 @@
 import { readFileSync, writeFileSync } from "fs";
 import path from "path";
 
-// ─── Local JSON helpers (used in dev and as seed source) ──────────────────────
-
+// ─── Local JSON helpers ───────────────────────────────────────────────────────
 function filePath(name: string) {
   return path.join(process.cwd(), "data", `${name}.json`);
 }
@@ -20,61 +19,59 @@ function writeLocalJSON<T>(name: string, data: T[]) {
 }
 
 // ─── Public async API ─────────────────────────────────────────────────────────
-
-/**
- * Read all documents from a collection (MongoDB) or JSON file (local dev).
- * On first deploy, the "products" collection is auto-seeded from data/products.json.
- */
 export async function readDB<T>(name: string): Promise<T[]> {
   if (!process.env.MONGODB_URI) {
     return readLocalJSON<T>(name);
   }
 
-  const { getDb } = await import("./mongodb");
-  const db = await getDb();
-  const docs = await db
-    .collection(name)
-    .find({}, { projection: { _id: 0 } })
-    .toArray();
+  try {
+    const { getDb } = await import("./mongodb");
+    const db = await getDb();
+    const docs = await db
+      .collection(name)
+      .find({}, { projection: { _id: 0 } })
+      .toArray();
 
-  // Auto-seed products from bundled JSON on first deploy
-  if (docs.length === 0 && name === "products") {
-    const seed = readLocalJSON<T>(name);
-    if (seed.length > 0) {
-      await db.collection(name).insertMany(seed as object[]);
-      return seed;
+    // Auto-seed products from bundled JSON on first deploy
+    if (docs.length === 0 && name === "products") {
+      const seed = readLocalJSON<T>(name);
+      if (seed.length > 0) {
+        await db.collection(name).insertMany(seed as object[]);
+        return seed;
+      }
     }
-  }
 
-  return docs as T[];
+    return docs as T[];
+  } catch (err) {
+    console.error(`readDB(${name}) MongoDB error:`, err);
+    // Fallback to local JSON if MongoDB fails
+    return readLocalJSON<T>(name);
+  }
 }
 
-/**
- * Replace the entire collection with the provided array.
- */
-export async function writeDB<T extends object>(
-  name: string,
-  data: T[]
-): Promise<void> {
+export async function writeDB<T extends object>(name: string, data: T[]): Promise<void> {
   if (!process.env.MONGODB_URI) {
     writeLocalJSON(name, data);
     return;
   }
 
-  const { getDb } = await import("./mongodb");
-  const db = await getDb();
-  await db.collection(name).deleteMany({});
-  if (data.length > 0) {
-    await db.collection(name).insertMany(data);
+  try {
+    const { getDb } = await import("./mongodb");
+    const db = await getDb();
+    await db.collection(name).deleteMany({});
+    if (data.length > 0) {
+      await db.collection(name).insertMany(data as object[]);
+    }
+  } catch (err) {
+    console.error(`writeDB(${name}) MongoDB error:`, err);
+    throw err; // re-throw so callers know the write failed
   }
 }
 
-/** Return the next numeric id for a list of records. */
 export function nextId(items: { id: number }[]): number {
   return items.length ? Math.max(...items.map((i) => i.id)) + 1 : 1;
 }
 
-// ─── Legacy sync aliases (kept so nothing breaks during migration) ────────────
-export const readJSON = <T>(name: string): T[] => readLocalJSON<T>(name);
-export const writeJSON = <T>(name: string, data: T[]) =>
-  writeLocalJSON(name, data);
+// ─── Legacy sync aliases ──────────────────────────────────────────────────────
+export const readJSON  = <T>(name: string): T[] => readLocalJSON<T>(name);
+export const writeJSON = <T>(name: string, data: T[]) => writeLocalJSON(name, data);
