@@ -148,7 +148,7 @@ export default function AdminProducts() {
   const [toast, setToast] = useState("");
 
   const load = useCallback(() => {
-    fetch("/api/admin/products").then(r=>r.json()).then(setProducts);
+    fetch("/api/admin/products", { cache: "no-store" }).then(r=>r.json()).then(setProducts);
   }, []);
   useEffect(() => { load(); }, [load]);
 

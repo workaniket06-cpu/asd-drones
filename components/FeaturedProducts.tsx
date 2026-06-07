@@ -120,7 +120,7 @@ export default function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    fetch("/api/admin/products")
+    fetch("/api/admin/products", { cache: "no-store" })
       .then(r => r.json())
       .then((all: Product[]) => {
         // Pick featured: highest-priced active products, one per category

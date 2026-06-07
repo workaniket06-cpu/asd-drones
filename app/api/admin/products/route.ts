@@ -7,9 +7,14 @@ const VALID_STATUSES   = ["active","draft","out_of_stock","low_stock"];
 
 interface Product { id: number; name: string; category: string; sku: string; price: number; originalPrice: number; stock: number; status: string; description: string; createdAt: string; }
 
+export const dynamic = "force-dynamic"; // disable Vercel cache for this route
+
 export async function GET(req: NextRequest) {
   // Products list is public (needed for shop page)
-  return NextResponse.json(await readDB<Product>("products"));
+  const products = await readDB<Product>("products");
+  return NextResponse.json(products, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
 }
 
 export async function POST(req: NextRequest) {

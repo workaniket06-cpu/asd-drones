@@ -40,9 +40,9 @@ export default function ShopPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/products")
+    fetch("/api/admin/products", { cache: "no-store" })
       .then(r => r.json())
-      .then(data => { setProducts(data); setLoading(false); });
+      .then(data => { setProducts(Array.isArray(data) ? data : []); setLoading(false); });
   }, []);
 
   let filtered = products.filter(p => {
