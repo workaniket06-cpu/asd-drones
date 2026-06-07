@@ -1,9 +1,11 @@
-import { readJSON } from "@/lib/adminData";
+import { readDB } from "@/lib/adminData";
 import Link from "next/link";
 import {
   Package, ShoppingCart, Users, Mail, TrendingUp,
   AlertTriangle, CheckCircle, Clock, XCircle, ArrowRight,
 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 interface Product { id: number; name: string; stock: number; status: string; price: number; }
 interface Order { id: string; customer: string; total: number; status: string; createdAt: string; }
@@ -13,39 +15,42 @@ interface Subscriber { email: string; subscribedAt: string; }
 function statusBadge(s: string) {
   const map: Record<string, string> = {
     delivered: "bg-green-100 text-green-700",
-    shipped: "bg-blue-100 text-blue-700",
-    processing: "bg-yellow-100 text-yellow-700",
-    pending: "bg-orange-100 text-orange-700",
+    shipped:   "bg-blue-100 text-blue-700",
+    processing:"bg-yellow-100 text-yellow-700",
+    pending:   "bg-orange-100 text-orange-700",
     cancelled: "bg-red-100 text-red-700",
   };
   return map[s] ?? "bg-slate-100 text-slate-600";
 }
 
-export default function AdminDashboard() {
-  const products = readJSON<Product>("products");
-  const orders = readJSON<Order>("orders");
-  const customers = readJSON<Customer>("customers");
-  const subscribers = readJSON<Subscriber>("subscribers");
+export default async function AdminDashboard() {
+  // ── Fetch all data from MongoDB (or local JSON fallback) ──
+  const [products, orders, customers, subscribers] = await Promise.all([
+    readDB<Product>("products"),
+    readDB<Order>("orders"),
+    readDB<Customer>("customers"),
+    readDB<Subscriber>("subscribers"),
+  ]);
 
-  const revenue = orders.filter((o) => o.status !== "cancelled").reduce((s, o) => s + o.total, 0);
-  const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
-  const lowStock = products.filter((p) => p.status === "low_stock" || p.status === "out_of_stock");
-  const recentOrders = [...orders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+  const revenue      = orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + o.total, 0);
+  const todayOrders  = orders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
+  const lowStock     = products.filter(p => p.status === "low_stock" || p.status === "out_of_stock");
+  const recentOrders    = [...orders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
   const recentCustomers = [...customers].sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()).slice(0, 4);
 
   const ordersByStatus = {
-    delivered: orders.filter((o) => o.status === "delivered").length,
-    shipped: orders.filter((o) => o.status === "shipped").length,
-    processing: orders.filter((o) => o.status === "processing").length,
-    pending: orders.filter((o) => o.status === "pending").length,
-    cancelled: orders.filter((o) => o.status === "cancelled").length,
+    delivered:  orders.filter(o => o.status === "delivered").length,
+    shipped:    orders.filter(o => o.status === "shipped").length,
+    processing: orders.filter(o => o.status === "processing").length,
+    pending:    orders.filter(o => o.status === "pending").length,
+    cancelled:  orders.filter(o => o.status === "cancelled").length,
   };
 
   const statCards = [
-    { label: "Total Revenue", value: `₹${revenue.toLocaleString("en-IN")}`, icon: TrendingUp, color: "bg-blue-600", change: "+12% this month" },
-    { label: "Total Orders", value: orders.length, icon: ShoppingCart, color: "bg-violet-600", change: `${todayOrders} today` },
-    { label: "Products", value: products.length, icon: Package, color: "bg-sky-600", change: `${lowStock.length} low/out of stock` },
-    { label: "Customers", value: customers.length, icon: Users, color: "bg-teal-600", change: `${subscribers.length} subscribers` },
+    { label: "Total Revenue",  value: `₹${revenue.toLocaleString("en-IN")}`, icon: TrendingUp,   color: "bg-blue-600",   change: `${todayOrders} orders today` },
+    { label: "Total Orders",   value: orders.length,                          icon: ShoppingCart, color: "bg-violet-600", change: `${todayOrders} today` },
+    { label: "Products",       value: products.length,                         icon: Package,      color: "bg-sky-600",    change: `${lowStock.length} low/out of stock` },
+    { label: "Customers",      value: customers.length,                        icon: Users,        color: "bg-teal-600",   change: `${subscribers.length} subscribers` },
   ];
 
   return (
@@ -72,18 +77,19 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Order status breakdown + low stock */}
+      {/* Order status + low stock + subscribers */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Order status */}
+
+        {/* Order status breakdown */}
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
           <h3 className="font-bold text-slate-900 text-sm mb-4">Order Status Breakdown</h3>
           <div className="space-y-3">
             {[
-              { label: "Delivered", count: ordersByStatus.delivered, icon: CheckCircle, color: "text-green-600" },
-              { label: "Shipped", count: ordersByStatus.shipped, icon: ShoppingCart, color: "text-blue-600" },
-              { label: "Processing", count: ordersByStatus.processing, icon: Clock, color: "text-yellow-600" },
-              { label: "Pending", count: ordersByStatus.pending, icon: Clock, color: "text-orange-500" },
-              { label: "Cancelled", count: ordersByStatus.cancelled, icon: XCircle, color: "text-red-500" },
+              { label: "Delivered",  count: ordersByStatus.delivered,  icon: CheckCircle, color: "text-green-600" },
+              { label: "Shipped",    count: ordersByStatus.shipped,    icon: ShoppingCart,color: "text-blue-600" },
+              { label: "Processing", count: ordersByStatus.processing, icon: Clock,       color: "text-yellow-600" },
+              { label: "Pending",    count: ordersByStatus.pending,    icon: Clock,       color: "text-orange-500" },
+              { label: "Cancelled",  count: ordersByStatus.cancelled,  icon: XCircle,     color: "text-red-500" },
             ].map(({ label, count, icon: Icon, color }) => (
               <div key={label} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -92,7 +98,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(count / orders.length) * 100}%` }} />
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${orders.length ? (count / orders.length) * 100 : 0}%` }} />
                   </div>
                   <span className="text-sm font-bold text-slate-900 w-4 text-right">{count}</span>
                 </div>
@@ -101,7 +107,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Low stock alert */}
+        {/* Low stock alerts */}
         <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-slate-900 text-sm">Stock Alerts</h3>
@@ -110,7 +116,7 @@ export default function AdminDashboard() {
           {lowStock.length === 0 ? (
             <div className="text-center py-6">
               <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">All products are well stocked</p>
+              <p className="text-sm text-slate-500">All products well stocked</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -139,7 +145,7 @@ export default function AdminDashboard() {
             {subscribers.length === 0 ? (
               <p className="text-sm text-slate-400 text-center py-4">No subscribers yet</p>
             ) : (
-              subscribers.slice(-4).reverse().map((s) => (
+              [...subscribers].reverse().slice(0, 4).map((s) => (
                 <div key={s.email} className="flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xs font-bold flex-shrink-0">
                     {s.email[0].toUpperCase()}
@@ -166,30 +172,37 @@ export default function AdminDashboard() {
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-slate-50">
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Order</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {recentOrders.map((o) => (
-                  <tr key={o.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-3.5 text-xs font-mono text-slate-500">{o.id}</td>
-                    <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{o.customer}</td>
-                    <td className="px-5 py-3.5 text-sm font-bold text-slate-900">₹{o.total.toLocaleString("en-IN")}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${statusBadge(o.status)}`}>{o.status}</span>
-                    </td>
+          {recentOrders.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <ShoppingCart className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No orders yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50">
+                    <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Order</th>
+                    <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
+                    <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
+                    <th className="text-left px-5 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {recentOrders.map((o) => (
+                    <tr key={o.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-3.5 text-xs font-mono text-slate-500">{o.id}</td>
+                      <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{o.customer}</td>
+                      <td className="px-5 py-3.5 text-sm font-bold text-slate-900">₹{o.total.toLocaleString("en-IN")}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${statusBadge(o.status)}`}>{o.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Recent customers */}
@@ -200,23 +213,30 @@ export default function AdminDashboard() {
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-50">
-            {recentCustomers.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors">
-                <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {c.name[0]}
+          {recentCustomers.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <Users className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No customers yet</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {recentCustomers.map((c) => (
+                <div key={c.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors">
+                  <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {c.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">{c.name}</p>
+                    <p className="text-xs text-slate-400 truncate">{c.email ?? ""}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs font-bold text-slate-900">₹{c.totalSpent.toLocaleString("en-IN")}</p>
+                    <p className="text-[10px] text-slate-400">{c.orders} orders</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">{c.name}</p>
-                  <p className="text-xs text-slate-400 truncate">{c.email ?? ""}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-bold text-slate-900">₹{c.totalSpent.toLocaleString("en-IN")}</p>
-                  <p className="text-[10px] text-slate-400">{c.orders} orders</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

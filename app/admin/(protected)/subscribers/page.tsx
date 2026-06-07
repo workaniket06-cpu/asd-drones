@@ -1,10 +1,12 @@
-import { readJSON } from "@/lib/adminData";
+import { readDB } from "@/lib/adminData";
 import { Mail, Users, Download, TrendingUp } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 interface Subscriber { email: string; subscribedAt: string; ip: string; }
 
-export default function AdminSubscribers() {
-  const subscribers = readJSON<Subscriber>("subscribers");
+export default async function AdminSubscribers() {
+  const subscribers = await readDB<Subscriber>("subscribers");
   const sorted = [...subscribers].sort((a,b)=>new Date(b.subscribedAt).getTime()-new Date(a.subscribedAt).getTime());
 
   const thisMonth = subscribers.filter(s => {
@@ -33,7 +35,6 @@ export default function AdminSubscribers() {
         </a>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
           { label:"Total Subscribers", value:subscribers.length, icon:Users, color:"bg-blue-600" },
@@ -53,13 +54,12 @@ export default function AdminSubscribers() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Subscriber table */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           {subscribers.length === 0 ? (
             <div className="p-12 text-center">
               <Mail className="w-12 h-12 text-slate-200 mx-auto mb-3" />
               <h3 className="font-bold text-slate-700 text-lg mb-1">No subscribers yet</h3>
-              <p className="text-slate-400 text-sm">Emails collected from the newsletter form will appear here. Refresh after new signups.</p>
+              <p className="text-slate-400 text-sm">Emails from the newsletter form will appear here.</p>
             </div>
           ) : (
             <table className="w-full">
@@ -94,7 +94,6 @@ export default function AdminSubscribers() {
           )}
         </div>
 
-        {/* Domain breakdown */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <h3 className="font-bold text-slate-900 text-sm mb-4">Top Email Domains</h3>
           {topDomains.length===0 ? (
@@ -116,10 +115,6 @@ export default function AdminSubscribers() {
               ))}
             </div>
           )}
-          <div className="mt-6 pt-4 border-t border-slate-100">
-            <p className="text-xs text-slate-400">Data stored in <code className="bg-slate-100 px-1 py-0.5 rounded text-[10px]">data/subscribers.json</code></p>
-            <p className="text-xs text-slate-400 mt-1">Refresh page to see new entries.</p>
-          </div>
         </div>
       </div>
     </div>
