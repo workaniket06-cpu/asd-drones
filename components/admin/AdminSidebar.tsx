@@ -1,26 +1,34 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Mail,
-  ExternalLink, ChevronRight, X, Menu,
+  ExternalLink, ChevronRight, X, Menu, Bell, LogOut,
 } from "lucide-react";
 import { useState } from "react";
 
 const nav = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
-  { href: "/admin/customers", label: "Customers", icon: Users },
-  { href: "/admin/subscribers", label: "Subscribers", icon: Mail },
+  { href: "/admin",               label: "Dashboard",     icon: LayoutDashboard, exact: true },
+  { href: "/admin/products",      label: "Products",      icon: Package },
+  { href: "/admin/orders",        label: "Orders",        icon: ShoppingCart },
+  { href: "/admin/customers",     label: "Customers",     icon: Users },
+  { href: "/admin/subscribers",   label: "Subscribers",   icon: Mail },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell },
 ];
 
 export default function AdminSidebar() {
-  const path = usePathname();
+  const path   = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   function isActive(href: string, exact?: boolean) {
     return exact ? path === href : path.startsWith(href);
+  }
+
+  async function handleLogout() {
+    await fetch("/api/auth/admin-logout", { method: "POST" });
+    router.push("/admin/login");
+    router.refresh();
   }
 
   const links = (
@@ -83,8 +91,8 @@ export default function AdminSidebar() {
 
         {links}
 
-        {/* Back to site */}
-        <div className="px-3 py-4 border-t border-slate-100">
+        {/* Bottom actions */}
+        <div className="px-3 py-4 border-t border-slate-100 space-y-1">
           <Link
             href="/"
             target="_blank"
@@ -93,6 +101,15 @@ export default function AdminSidebar() {
             <ExternalLink className="w-4 h-4 flex-shrink-0" />
             View Store
           </Link>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            Logout
+          </button>
         </div>
       </aside>
     </>
