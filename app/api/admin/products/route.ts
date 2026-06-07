@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readDB, writeDB, nextId } from "@/lib/adminData";
+import { readDB } from "@/lib/adminData";
 import { requireAdmin } from "@/lib/adminAuth";
+import { getDb } from "@/lib/mongodb";
 
 export const dynamic = "force-dynamic";
 
@@ -15,23 +16,24 @@ interface Product {
   status: string; description: string; createdAt: string; image?: string;
 }
 
-// GET — public (shop page needs this)
+function getStatus(stock: number) {
+  return stock === 0 ? "out_of_stock" : stock <= 10 ? "low_stock" : "active";
+}
+
+// GET — public
 export async function GET() {
   try {
     const products = await readDB<Product>("products");
     return NextResponse.json(products, {
-      headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        "Pragma": "no-cache",
-      },
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
     });
   } catch (err) {
     console.error("Products GET error:", err);
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
+    return NextResponse.json([], { headers: { "Cache-Control": "no-store" } });
   }
 }
 
-// POST — admin only
+// POST — admin only — uses insertOne (safe, no replace-all)
 export async function POST(req: NextRequest) {
   const authError = requireAdmin(req);
   if (authError) return authError;
@@ -46,28 +48,50 @@ export async function POST(req: NextRequest) {
     if (!sku)  return NextResponse.json({ error: "SKU is required" }, { status: 400 });
 
     const category    = VALID_CATEGORIES.includes(body.category) ? body.category : "Accessories";
-    const price       = Math.max(0, parseFloat(body.price)         || 0);
-    const originalPrice = Math.max(0, parseFloat(body.originalPrice) || price);
-    const stock       = Math.max(0, parseInt(body.stock)            || 0);
-    const status      = stock === 0 ? "out_of_stock" : stock <= 10 ? "low_stock" : "active";
+    const price       = Math.max(0, parseFloat(body.price)       || 0);
+    const origPrice   = Math.max(0, parseFloat(body.originalPrice) || price);
+    const stock       = Math.max(0, parseInt(body.stock)           || 0);
 
-    const products = await readDB<Product>("products");
+    // Check duplicate SKU
+    const db = process.env.MONGODB_URI ? await getDb() : null;
 
-    if (products.find(p => p.sku.toLowerCase() === sku.toLowerCase()))
-      return NextResponse.json({ error: "SKU already exists" }, { status: 409 });
+    if (db) {
+      const exists = await db.collection("products").findOne({ sku: { $regex: new RegExp(`^${sku}$`, "i") } });
+      if (exists) return NextResponse.json({ error: "SKU already exists" }, { status: 409 });
 
-    const product: Product = {
-      id: nextId(products), name, sku, category, price, originalPrice, stock, status,
-      description: String(body.description || "").trim().slice(0, 2000),
-      image: body.image || "",
-      createdAt: new Date().toISOString(),
-    };
+      // Get max id
+      const [last] = await db.collection("products").find({}, { projection: { id: 1 } }).sort({ id: -1 }).limit(1).toArray();
+      const newId = last ? (last.id as number) + 1 : 1;
 
-    products.push(product);
-    await writeDB("products", products);
-    return NextResponse.json(product, { status: 201 });
+      const product: Product = {
+        id: newId, name, sku, category, price, originalPrice: origPrice, stock,
+        status: getStatus(stock),
+        description: String(body.description || "").trim().slice(0, 2000),
+        image: body.image || "",
+        createdAt: new Date().toISOString(),
+      };
+
+      await db.collection("products").insertOne({ ...product });
+      return NextResponse.json(product, { status: 201 });
+    } else {
+      // Local dev fallback
+      const { readDB: rDB, writeDB, nextId } = await import("@/lib/adminData");
+      const products = await rDB<Product>("products");
+      if (products.find(p => p.sku.toLowerCase() === sku.toLowerCase()))
+        return NextResponse.json({ error: "SKU already exists" }, { status: 409 });
+      const product: Product = {
+        id: nextId(products), name, sku, category, price, originalPrice: origPrice, stock,
+        status: getStatus(stock),
+        description: String(body.description || "").trim().slice(0, 2000),
+        image: body.image || "",
+        createdAt: new Date().toISOString(),
+      };
+      products.push(product);
+      await writeDB("products", products);
+      return NextResponse.json(product, { status: 201 });
+    }
   } catch (err) {
     console.error("Products POST error:", err);
-    return NextResponse.json({ error: "Failed to save product" }, { status: 500 });
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

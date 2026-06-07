@@ -165,16 +165,36 @@ export default function AdminProducts() {
   async function save() {
     if (!form.name || !form.sku) return;
     setSaving(true);
-    if (modal === "add") {
-      await fetch("/api/admin/products", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(form) });
-      showToast("Product added!");
-    } else if (editProduct) {
-      await fetch(`/api/admin/products/${editProduct.id}`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(form) });
-      showToast("Product updated!");
+    try {
+      if (modal === "add") {
+        const res = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(`❌ Error: ${data.error || res.status}`); setSaving(false); return; }
+        showToast("✅ Product added!");
+      } else if (editProduct) {
+        const res = await fetch(`/api/admin/products/${editProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(`❌ Error: ${data.error || res.status}`); setSaving(false); return; }
+        showToast("✅ Product updated!");
+      }
+      setModal(null);
+      // Small delay then reload to ensure DB write is complete
+      setTimeout(() => load(), 500);
+    } catch (err) {
+      showToast(`❌ Network error: ${err}`);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setModal(null);
-    load();
   }
 
   async function del(id: number) {
