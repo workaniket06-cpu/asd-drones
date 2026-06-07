@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Star, ShoppingCart, SlidersHorizontal, Check, Search, X } from "lucide-react";
@@ -29,15 +30,24 @@ function AddButton({ product }: { product: Product }) {
   );
 }
 
-export default function ShopPage() {
+function ShopContent() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [catFilter, setCatFilter] = useState("All");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [catFilter, setCatFilter] = useState(searchParams.get("cat") || "All");
   const [priceMax, setPriceMax] = useState("");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sort, setSort] = useState("popular");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Sync URL params when they change (e.g. from navbar search)
+  useEffect(() => {
+    const q = searchParams.get("search") || "";
+    const c = searchParams.get("cat") || "All";
+    setSearch(q);
+    setCatFilter(c);
+  }, [searchParams]);
 
   useEffect(() => {
     fetch("/api/admin/products", { cache: "no-store" })
@@ -207,5 +217,13 @@ export default function ShopPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400">Loading shop...</div>}>
+      <ShopContent />
+    </Suspense>
   );
 }

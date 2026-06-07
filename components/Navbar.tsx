@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ShoppingCart, Menu, X, ChevronDown, Search, User, LogOut, LogIn, UserPlus } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -28,10 +29,33 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [segOpen, setSegOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { count } = useCart();
   const { user, logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  function openSearch() {
+    setSearchOpen(true);
+    setSearchQuery("");
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+    setSearchQuery("");
+  }
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    closeSearch();
+    router.push(`/shop?search=${encodeURIComponent(q)}`);
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -46,6 +70,12 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeSearch(); };
+    if (searchOpen) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [searchOpen]);
 
   return (
     <header
@@ -138,7 +168,11 @@ export default function Navbar() {
 
           {/* Right icons */}
           <div className="flex items-center gap-2">
-            <button className="hidden sm:flex items-center justify-center w-9 h-9 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-colors">
+            <button
+              onClick={openSearch}
+              className="hidden sm:flex items-center justify-center w-9 h-9 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+              title="Search products"
+            >
               <Search className="w-4.5 h-4.5" />
             </button>
             {/* User menu */}
@@ -227,6 +261,14 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="border-t border-slate-100 my-3" />
+            {/* Mobile search */}
+            <button
+              onClick={() => { setIsOpen(false); openSearch(); }}
+              className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+            >
+              <Search className="w-4 h-4" /> Search Products
+            </button>
+            <div className="border-t border-slate-100 my-3" />
             {["About", "Blog", "Contact"].map((item) => (
               <Link
                 key={item}
@@ -253,6 +295,51 @@ export default function Navbar() {
                 <Link href="/signup" onClick={() => setIsOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-bold text-blue-600 hover:bg-blue-50 transition-colors">Create Account</Link>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Search Overlay ── */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 z-[200] bg-slate-900/80 backdrop-blur-sm flex flex-col items-center pt-24 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) closeSearch(); }}
+        >
+          <div className="w-full max-w-2xl">
+            <form onSubmit={handleSearch} className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products, SKUs, categories..."
+                className="w-full pl-12 pr-14 py-4 text-lg bg-white rounded-2xl shadow-2xl border-0 outline-none text-slate-900 placeholder-slate-400"
+              />
+              <button
+                type="button"
+                onClick={closeSearch}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </form>
+
+            {/* Quick category links */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {categories.map((cat) => (
+                <button
+                  key={cat.name}
+                  onClick={() => { closeSearch(); router.push(cat.href); }}
+                  className="px-3 py-1.5 text-sm font-medium bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors border border-white/20"
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+            <p className="text-slate-400 text-sm mt-4 text-center">
+              Press <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-xs">Enter</kbd> to search · <kbd className="px-1.5 py-0.5 bg-white/10 rounded text-xs">Esc</kbd> to close
+            </p>
           </div>
         </div>
       )}
