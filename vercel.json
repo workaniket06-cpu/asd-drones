@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-report?secret=asd_cron_2026&type=daily",
+      "schedule": "59 23 * * *"
+    },
+    {
+      "path": "/api/cron/daily-report?secret=asd_cron_2026&type=weekly",
+      "schedule": "0 8 * * 1"
+    }
+  ]
+}

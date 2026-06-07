@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readDB, writeDB } from "@/lib/adminData";
+import { onSubscriberAdded } from "@/lib/automation";
 
 interface Subscriber {
   email: string;
@@ -26,6 +27,10 @@ export async function POST(req: NextRequest) {
   });
 
   await writeDB("subscribers", subscribers);
+
+  // 🤖 Automation: notify admin of new subscriber
+  onSubscriberAdded(email).catch(console.error);
+
   return NextResponse.json({ message: "Subscribed successfully" });
 }
 

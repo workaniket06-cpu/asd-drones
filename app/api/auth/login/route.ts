@@ -27,7 +27,11 @@ export async function POST(req: NextRequest) {
   const session = { id: customer.id, name: customer.name, email: customer.email };
   const res = NextResponse.json({ message: "Login successful", customer: session });
   res.cookies.set("asd_session", JSON.stringify(session), {
-    httpOnly: true, path: "/", maxAge: 60 * 60 * 24 * 7, sameSite: "lax",
+    httpOnly: true,
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
   return res;
 }

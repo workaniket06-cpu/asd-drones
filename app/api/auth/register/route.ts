@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   const { passwordHash: _, ...safeCustomer } = newCustomer;
   const res = NextResponse.json({ message: "Account created successfully", customer: safeCustomer }, { status: 201 });
   res.cookies.set("asd_session", JSON.stringify({ id: safeCustomer.id, name: safeCustomer.name, email: safeCustomer.email }), {
-    httpOnly: true, path: "/", maxAge: 60 * 60 * 24 * 7, sameSite: "lax",
+    httpOnly: true, path: "/", maxAge: 60 * 60 * 24 * 7, sameSite: "lax", secure: process.env.NODE_ENV === "production",
   });
   return res;
 }
