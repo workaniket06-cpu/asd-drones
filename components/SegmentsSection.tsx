@@ -3,15 +3,6 @@ import { ArrowRight } from "lucide-react";
 
 const segments = [
   {
-    id: "defence",
-    title: "Defence",
-    description: "High-endurance drones for surveillance, reconnaissance, and critical missions with military-grade components.",
-    icon: "🛡️",
-    gradient: "from-slate-800 to-slate-900",
-    accentColor: "border-blue-500",
-    href: "/segments/defence",
-  },
-  {
     id: "agriculture",
     title: "Agriculture",
     description: "Precision agricultural drones for crop monitoring, spraying, and field analysis to boost yields.",
@@ -29,15 +20,6 @@ const segments = [
     accentColor: "border-sky-500",
     href: "/segments/consumer",
   },
-  {
-    id: "custom",
-    title: "Custom Drone",
-    description: "Work with our engineers to design bespoke drone solutions tailored to your unique requirements.",
-    icon: "⚙️",
-    gradient: "from-violet-800 to-slate-900",
-    accentColor: "border-violet-500",
-    href: "/segments/custom",
-  },
 ];
 
 export default function SegmentsSection() {
@@ -54,7 +36,7 @@ export default function SegmentsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {segments.map((seg) => (
             <Link
               key={seg.id}
