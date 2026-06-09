@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ message: "Subscribed successfully" });
 }
 
+// GET disabled — subscriber data is admin-only, access via /admin/subscribers
 export async function GET() {
-  const subscribers = await readDB<Subscriber>("subscribers");
-  return NextResponse.json({ count: subscribers.length, subscribers });
+  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 }
