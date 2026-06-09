@@ -10,7 +10,7 @@ const perks = [
   {
     icon: Truck,
     title: "Fast Pan-India Delivery",
-    description: "Same-day dispatch on orders before 3 PM. Free shipping above ₹2000.",
+    description: "Same-day dispatch on orders before 3 PM. Free shipping on all orders.",
     color: "text-sky-600 bg-sky-50",
   },
   {
