@@ -11,12 +11,6 @@ const footerLinks = {
     { name: "Propellers", href: "/shop?cat=propellers" },
     { name: "Battery & Charging", href: "/shop?cat=battery" },
   ],
-  Segments: [
-    { name: "Defence", href: "/segments/defence" },
-    { name: "Agriculture", href: "/segments/agriculture" },
-    { name: "Consumer", href: "/segments/consumer" },
-    { name: "Custom Drone", href: "/segments/custom" },
-  ],
   Company: [
     { name: "About Us", href: "/about" },
     { name: "Blog", href: "/blog" },

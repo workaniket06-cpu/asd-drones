@@ -17,18 +17,12 @@ const categories = [
   { name: "Accessories", href: "/shop?cat=accessories", sub: ["Cables", "Connectors", "Tools"] },
 ];
 
-const segments = [
-  { name: "Defence", href: "/segments/defence" },
-  { name: "Agriculture", href: "/segments/agriculture" },
-  { name: "Consumer", href: "/segments/consumer" },
-  { name: "Custom Drone", href: "/segments/custom" },
-];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
-  const [segOpen, setSegOpen] = useState(false);
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { count } = useCart();
@@ -137,29 +131,6 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Segments dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setSegOpen(true)}
-              onMouseLeave={() => setSegOpen(false)}
-            >
-              <button className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors rounded-lg hover:bg-blue-50">
-                Segments <ChevronDown className="w-4 h-4" />
-              </button>
-              {segOpen && (
-                <div className="absolute top-full left-0 w-48 bg-white shadow-2xl rounded-xl border border-slate-100 py-2">
-                  {segments.map((seg) => (
-                    <Link
-                      key={seg.name}
-                      href={seg.href}
-                      className="block px-4 py-2.5 text-sm text-slate-700 hover:text-blue-700 hover:bg-blue-50 font-medium transition-colors"
-                    >
-                      {seg.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
 
             <Link href="/about" className="px-3 py-2 text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors rounded-lg hover:bg-blue-50">About</Link>
             <Link href="/blog" className="px-3 py-2 text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors rounded-lg hover:bg-blue-50">Blog</Link>
@@ -246,18 +217,6 @@ export default function Navbar() {
                 className="block px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50 transition-colors"
               >
                 {cat.name}
-              </Link>
-            ))}
-            <div className="border-t border-slate-100 my-3" />
-            <div className="font-semibold text-xs text-slate-400 uppercase tracking-wider px-3 mb-2">Segments</div>
-            {segments.map((seg) => (
-              <Link
-                key={seg.name}
-                href={seg.href}
-                onClick={() => setIsOpen(false)}
-                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50 transition-colors"
-              >
-                {seg.name}
               </Link>
             ))}
             <div className="border-t border-slate-100 my-3" />
