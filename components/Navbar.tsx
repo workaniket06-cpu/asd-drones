@@ -79,7 +79,7 @@ export default function Navbar() {
     >
       {/* Top bar */}
       <div className="bg-blue-700 text-white text-xs py-1.5 text-center">
-        Free Shipping on All Orders &nbsp;|&nbsp; Priority support &nbsp;|&nbsp; 100% genuine parts
+        Free Shipping within Same State &nbsp;|&nbsp; ₹199 for Other States &nbsp;|&nbsp; 100% genuine parts
       </div>
 
       {/* Main nav */}
