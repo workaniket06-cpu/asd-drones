@@ -1,4 +1,4 @@
-import { Shield, Truck, Wrench, Headphones, CreditCard, Package } from "lucide-react";
+import { Shield, Truck, CreditCard, Package } from "lucide-react";
 
 const perks = [
   {
@@ -12,18 +12,6 @@ const perks = [
     title: "Fast Pan-India Delivery",
     description: "Same-day dispatch on orders before 3 PM. Free shipping above ₹2000.",
     color: "text-sky-600 bg-sky-50",
-  },
-  {
-    icon: Wrench,
-    title: "Free Repair Support",
-    description: "Expert advice and free diagnostics to get your build flying again.",
-    color: "text-indigo-600 bg-indigo-50",
-  },
-  {
-    icon: Headphones,
-    title: "Expert Consultation",
-    description: "Speak to our drone engineers before purchasing — we help you build right.",
-    color: "text-violet-600 bg-violet-50",
   },
   {
     icon: CreditCard,
