@@ -21,11 +21,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [notFound, setNotFound] = useState(false);
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
+  const [activeImg, setActiveImg] = useState("");
 
   useEffect(() => {
     fetch(`/api/admin/products/${id}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(data => { setProduct(data); setLoading(false); })
+      .then(data => { setProduct(data); setLoading(false); setActiveImg(data.image || (data.images?.[0]) || ""); })
       .catch(() => { setNotFound(true); setLoading(false); });
   }, [id]);
 
@@ -65,7 +66,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
   const inStock = product.stock > 0;
   const allImages = [product.image, ...(product.images || [])].filter(Boolean) as string[];
-  const [activeImg, setActiveImg] = useState(allImages[0] || "");
 
   return (
     <div className="min-h-screen bg-slate-50 pt-24">
