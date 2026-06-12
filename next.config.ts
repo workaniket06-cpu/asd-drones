@@ -35,7 +35,10 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Disable powered-by header
+  images: {
+    unoptimized: true,
+  },
+
   poweredByHeader: false,
 };
 
