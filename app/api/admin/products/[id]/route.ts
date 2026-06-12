@@ -50,13 +50,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const stock       = Math.max(0, parseInt(body.stock)            || 0);
     const description       = String(body.description || "").trim().slice(0, 2000);
     const image             = body.image || "";
+    const images            = Array.isArray(body.images)
+      ? body.images.filter((u: unknown) => typeof u === "string").slice(0, 10)
+      : [];
     const descriptionImages = Array.isArray(body.descriptionImages)
       ? body.descriptionImages.filter((u: unknown) => typeof u === "string").slice(0, 10)
       : [];
 
     const update = {
       name, sku, category, price, originalPrice: origPrice, stock,
-      status: getStatus(stock), description, image, descriptionImages,
+      status: getStatus(stock), description, image, images, descriptionImages,
     };
 
     if (process.env.MONGODB_URI) {

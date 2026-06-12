@@ -7,12 +7,13 @@ interface Product {
   id: number; name: string; category: string; sku: string;
   price: number; originalPrice: number; stock: number;
   status: string; description: string; createdAt: string; image?: string;
+  images?: string[];
   descriptionImages?: string[];
 }
 type FormData = Omit<Product, "id" | "status" | "createdAt">;
 
 const CATEGORIES = ["Electronics","FPV Equipment","Motors","Frames","Propellers","Battery & Charging","Radio & Receiver","Accessories"];
-const empty: FormData = { name:"", category:"Electronics", sku:"", price:0, originalPrice:0, stock:0, description:"", image:"", descriptionImages:[] };
+const empty: FormData = { name:"", category:"Electronics", sku:"", price:0, originalPrice:0, stock:0, description:"", image:"", images:[], descriptionImages:[] };
 
 function statusBadge(s: string) {
   if (s === "active") return "bg-green-100 text-green-700";
@@ -215,7 +216,7 @@ export default function AdminProducts() {
 
   function openEdit(p: Product) {
     setEditProduct(p);
-    setForm({ name:p.name, category:p.category, sku:p.sku, price:p.price, originalPrice:p.originalPrice, stock:p.stock, description:p.description, image:p.image||"", descriptionImages:p.descriptionImages||[] });
+    setForm({ name:p.name, category:p.category, sku:p.sku, price:p.price, originalPrice:p.originalPrice, stock:p.stock, description:p.description, image:p.image||"", images:p.images||[], descriptionImages:p.descriptionImages||[] });
     setModal("edit");
   }
 
@@ -363,8 +364,17 @@ export default function AdminProducts() {
             </div>
 
             <div className="px-6 py-5 space-y-4">
-              {/* Image uploader */}
+              {/* Main image */}
               <ImageUploader value={form.image || ""} onChange={url => setForm(f => ({ ...f, image: url }))} />
+
+              {/* Gallery images */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Gallery Images <span className="font-normal text-slate-400">(top view, side view, back view etc. — shown as thumbnails)</span></label>
+                <DescriptionImagesUploader
+                  values={form.images || []}
+                  onChange={urls => setForm(f => ({ ...f, images: urls }))}
+                />
+              </div>
 
               {/* Name & SKU */}
               {[

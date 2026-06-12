@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
         status: getStatus(stock),
         description: String(body.description || "").trim().slice(0, 2000),
         image: body.image || "",
+        images: Array.isArray(body.images) ? body.images.filter((u: unknown) => typeof u === "string").slice(0, 10) : [],
         descriptionImages: Array.isArray(body.descriptionImages) ? body.descriptionImages.filter((u: unknown) => typeof u === "string").slice(0, 10) : [],
         createdAt: new Date().toISOString(),
       };
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
         status: getStatus(stock),
         description: String(body.description || "").trim().slice(0, 2000),
         image: body.image || "",
+        images: Array.isArray(body.images) ? body.images.filter((u: unknown) => typeof u === "string").slice(0, 10) : [],
         descriptionImages: Array.isArray(body.descriptionImages) ? body.descriptionImages.filter((u: unknown) => typeof u === "string").slice(0, 10) : [],
         createdAt: new Date().toISOString(),
       };
