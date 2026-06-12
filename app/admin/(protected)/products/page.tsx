@@ -350,9 +350,10 @@ export default function AdminProducts() {
               {/* Description */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Description</label>
-                <textarea rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Short product description…"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400 resize-none" />
+                <textarea rows={8} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder={"Overview\nWrite product overview here...\n\nFeatures\n- Feature one\n- Feature two\n\nSpecifications\nWeight: 100g\nDimensions: 10x10cm"}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400 resize-y font-mono" />
+                <p className="text-xs text-slate-400 mt-1">Use new lines for paragraphs. Start lines with - for bullet points. Use &quot;Key: Value&quot; format for specs.</p>
               </div>
             </div>
 

@@ -122,7 +122,39 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             {product.description && (
-              <p className="text-sm text-slate-600 leading-relaxed mb-6 border-t border-slate-100 pt-4">{product.description}</p>
+              <div className="mb-6 border-t border-slate-100 pt-4">
+                <h3 className="text-sm font-bold text-slate-800 mb-3">Product Description</h3>
+                <div className="text-sm text-slate-600 leading-relaxed space-y-2">
+                  {product.description.split(/\n+/).map((line, i) => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return null;
+                    // Section headings (e.g. "Features", "Specifications", "Overview")
+                    if (/^(Overview|Features|Specifications?|Applications?|Key Features?|Description|Highlights?|What['']s in the Box|In the Box|Package Contents?)$/i.test(trimmed)) {
+                      return <p key={i} className="font-bold text-slate-800 mt-3 first:mt-0">{trimmed}</p>;
+                    }
+                    // Bullet lines starting with - or •
+                    if (/^[-•*]\s/.test(trimmed)) {
+                      return (
+                        <div key={i} className="flex gap-2">
+                          <span className="text-blue-500 mt-0.5 flex-shrink-0">•</span>
+                          <span>{trimmed.replace(/^[-•*]\s+/, "")}</span>
+                        </div>
+                      );
+                    }
+                    // Key: Value lines (specs)
+                    if (/^[^:]+:\s+\S/.test(trimmed) && trimmed.length < 100) {
+                      const [key, ...rest] = trimmed.split(":");
+                      return (
+                        <div key={i} className="flex gap-2">
+                          <span className="font-semibold text-slate-700 flex-shrink-0">{key}:</span>
+                          <span>{rest.join(":").trim()}</span>
+                        </div>
+                      );
+                    }
+                    return <p key={i}>{trimmed}</p>;
+                  })}
+                </div>
+              </div>
             )}
 
             {inStock && (
