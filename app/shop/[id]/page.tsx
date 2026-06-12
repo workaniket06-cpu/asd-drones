@@ -9,6 +9,7 @@ interface Product {
   id: number; name: string; category: string; sku: string;
   price: number; originalPrice: number; stock: number;
   status: string; description: string; image?: string;
+  descriptionImages?: string[];
 }
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -115,12 +116,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> Out of Stock
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" /> Out of Stock &nbsp;·&nbsp; 0 units available
                 </span>
               )}
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
-                SKU: <span className="font-bold text-slate-800">{product.sku}</span>
-              </span>
+              {product.sku && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
+                  SKU: <span className="font-bold text-slate-800">{product.sku}</span>
+                </span>
+              )}
             </div>
 
             {product.description && (
@@ -130,11 +133,20 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   {product.description.split(/\n+/).map((line, i) => {
                     const trimmed = line.trim();
                     if (!trimmed) return null;
-                    // Section headings (e.g. "Features", "Specifications", "Overview")
+                    // Inline image tag: [img:/images/products/x.png]
+                    const imgMatch = trimmed.match(/^\[img:(.+?)\]$/);
+                    if (imgMatch) {
+                      return (
+                        <div key={i} className="relative w-full rounded-xl overflow-hidden border border-slate-100 bg-slate-50" style={{ height: 220 }}>
+                          <Image src={imgMatch[1]} alt="" fill className="object-contain p-2" sizes="600px" />
+                        </div>
+                      );
+                    }
+                    // Section headings
                     if (/^(Overview|Features|Specifications?|Applications?|Key Features?|Description|Highlights?|What['']s in the Box|In the Box|Package Contents?)$/i.test(trimmed)) {
                       return <p key={i} className="font-bold text-slate-800 mt-3 first:mt-0">{trimmed}</p>;
                     }
-                    // Bullet lines starting with - or •
+                    // Bullet lines
                     if (/^[-•*]\s/.test(trimmed)) {
                       return (
                         <div key={i} className="flex gap-2">
@@ -156,6 +168,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     return <p key={i}>{trimmed}</p>;
                   })}
                 </div>
+                {/* Description images grid */}
+                {product.descriptionImages && product.descriptionImages.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {product.descriptionImages.map((url, i) => (
+                      <div key={i} className="relative rounded-xl overflow-hidden border border-slate-100 bg-slate-50" style={{ height: 180 }}>
+                        <Image src={url} alt="" fill className="object-contain p-2" sizes="300px" />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

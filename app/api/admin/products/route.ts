@@ -14,6 +14,7 @@ interface Product {
   id: number; name: string; category: string; sku: string;
   price: number; originalPrice: number; stock: number;
   status: string; description: string; createdAt: string; image?: string;
+  descriptionImages?: string[];
 }
 
 function getStatus(stock: number) {
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
         status: getStatus(stock),
         description: String(body.description || "").trim().slice(0, 2000),
         image: body.image || "",
+        descriptionImages: Array.isArray(body.descriptionImages) ? body.descriptionImages.filter((u: unknown) => typeof u === "string").slice(0, 10) : [],
         createdAt: new Date().toISOString(),
       };
 
@@ -84,6 +86,7 @@ export async function POST(req: NextRequest) {
         status: getStatus(stock),
         description: String(body.description || "").trim().slice(0, 2000),
         image: body.image || "",
+        descriptionImages: Array.isArray(body.descriptionImages) ? body.descriptionImages.filter((u: unknown) => typeof u === "string").slice(0, 10) : [],
         createdAt: new Date().toISOString(),
       };
       products.push(product);

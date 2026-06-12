@@ -7,11 +7,12 @@ interface Product {
   id: number; name: string; category: string; sku: string;
   price: number; originalPrice: number; stock: number;
   status: string; description: string; createdAt: string; image?: string;
+  descriptionImages?: string[];
 }
 type FormData = Omit<Product, "id" | "status" | "createdAt">;
 
 const CATEGORIES = ["Electronics","FPV Equipment","Motors","Frames","Propellers","Battery & Charging","Radio & Receiver","Accessories"];
-const empty: FormData = { name:"", category:"Electronics", sku:"", price:0, originalPrice:0, stock:0, description:"", image:"" };
+const empty: FormData = { name:"", category:"Electronics", sku:"", price:0, originalPrice:0, stock:0, description:"", image:"", descriptionImages:[] };
 
 function statusBadge(s: string) {
   if (s === "active") return "bg-green-100 text-green-700";
@@ -137,6 +138,62 @@ function ImageUploader({ value, onChange }: { value: string; onChange: (url: str
   );
 }
 
+function DescriptionImagesUploader({ values, onChange }: { values: string[]; onChange: (urls: string[]) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function upload(files: FileList) {
+    setError("");
+    const uploaded: string[] = [];
+    setUploading(true);
+    for (const file of Array.from(files)) {
+      if (!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)) continue;
+      if (file.size > 5 * 1024 * 1024) { setError("Each file must be under 5 MB"); continue; }
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok) uploaded.push(data.url);
+    }
+    setUploading(false);
+    if (uploaded.length) onChange([...values, ...uploaded]);
+  }
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files?.length) upload(e.target.files);
+    e.target.value = "";
+  }
+
+  function remove(url: string) { onChange(values.filter(u => u !== url)); }
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-slate-600 mb-1.5">Description Images <span className="font-normal text-slate-400">(shown below description on product page)</span></label>
+      {values.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {values.map((url, i) => (
+            <div key={i} className="relative group w-20 h-20 border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+              <Image src={url} alt="" fill className="object-cover" sizes="80px" />
+              <button type="button" onClick={() => remove(url)}
+                className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
+        className="flex items-center gap-2 px-3 py-2 border border-dashed border-slate-300 rounded-xl text-xs font-semibold text-slate-600 hover:border-blue-400 hover:bg-blue-50 transition-colors">
+        {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+        {uploading ? "Uploading…" : "Add images"}
+      </button>
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden" onChange={handleFile} />
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  );
+}
+
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
@@ -158,7 +215,7 @@ export default function AdminProducts() {
 
   function openEdit(p: Product) {
     setEditProduct(p);
-    setForm({ name:p.name, category:p.category, sku:p.sku, price:p.price, originalPrice:p.originalPrice, stock:p.stock, description:p.description, image:p.image||"" });
+    setForm({ name:p.name, category:p.category, sku:p.sku, price:p.price, originalPrice:p.originalPrice, stock:p.stock, description:p.description, image:p.image||"", descriptionImages:p.descriptionImages||[] });
     setModal("edit");
   }
 
@@ -351,10 +408,16 @@ export default function AdminProducts() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Description</label>
                 <textarea rows={8} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder={"Overview\nWrite product overview here...\n\nFeatures\n- Feature one\n- Feature two\n\nSpecifications\nWeight: 100g\nDimensions: 10x10cm"}
+                  placeholder={"Overview\nWrite product overview here...\n\nFeatures\n- Feature one\n- Feature two\n\nSpecifications\nWeight: 100g\nDimensions: 10x10cm\n\n[img:/images/products/example.png]"}
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400 resize-y font-mono" />
-                <p className="text-xs text-slate-400 mt-1">Use new lines for paragraphs. Start lines with - for bullet points. Use &quot;Key: Value&quot; format for specs.</p>
+                <p className="text-xs text-slate-400 mt-1">Bullet points: start line with <code className="bg-slate-100 px-1 rounded">-</code> · Specs: <code className="bg-slate-100 px-1 rounded">Key: Value</code> · Inline image: <code className="bg-slate-100 px-1 rounded">[img:/images/products/file.png]</code></p>
               </div>
+
+              {/* Description Images */}
+              <DescriptionImagesUploader
+                values={form.descriptionImages || []}
+                onChange={urls => setForm(f => ({ ...f, descriptionImages: urls }))}
+              />
             </div>
 
             <div className="px-6 pb-5 flex gap-3 sticky bottom-0 bg-white pt-3 border-t border-slate-100">

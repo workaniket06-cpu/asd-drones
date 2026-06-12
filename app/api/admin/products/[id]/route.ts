@@ -14,6 +14,7 @@ interface Product {
   id: number; name: string; category: string; sku: string;
   price: number; originalPrice: number; stock: number;
   status: string; description: string; createdAt: string; image?: string;
+  descriptionImages?: string[];
 }
 
 function getStatus(stock: number) {
@@ -47,12 +48,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const price       = Math.max(0, parseFloat(body.price)         || 0);
     const origPrice   = Math.max(0, parseFloat(body.originalPrice) || price);
     const stock       = Math.max(0, parseInt(body.stock)            || 0);
-    const description = String(body.description || "").trim().slice(0, 2000);
-    const image       = body.image || "";
+    const description       = String(body.description || "").trim().slice(0, 2000);
+    const image             = body.image || "";
+    const descriptionImages = Array.isArray(body.descriptionImages)
+      ? body.descriptionImages.filter((u: unknown) => typeof u === "string").slice(0, 10)
+      : [];
 
     const update = {
       name, sku, category, price, originalPrice: origPrice, stock,
-      status: getStatus(stock), description, image,
+      status: getStatus(stock), description, image, descriptionImages,
     };
 
     if (process.env.MONGODB_URI) {
