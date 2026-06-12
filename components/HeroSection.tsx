@@ -134,7 +134,7 @@ export default function HeroSection() {
           <div className="flex flex-wrap gap-6">
             {[
               { icon: Shield, text: "100% Genuine Parts" },
-              { icon: Truck, text: "Free Local Shipping · ₹199 Other States" },
+              { icon: Truck, text: "Free Shipping All Over India" },
               { icon: Headphones, text: "Expert Support" },
             ].map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-2 text-slate-400 text-sm">
