@@ -9,6 +9,7 @@ interface Product {
   id: number; name: string; category: string; sku: string;
   price: number; originalPrice: number; stock: number;
   status: string; description: string; image?: string;
+  images?: string[];
   descriptionImages?: string[];
 }
 
@@ -63,6 +64,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
   const inStock = product.stock > 0;
+  const allImages = [product.image, ...(product.images || [])].filter(Boolean) as string[];
+  const [activeImg, setActiveImg] = useState(allImages[0] || "");
 
   return (
     <div className="min-h-screen bg-slate-50 pt-24">
@@ -77,17 +80,31 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         </nav>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image */}
-          <div className="bg-white rounded-2xl border border-slate-100 flex items-center justify-center p-8 relative min-h-72">
-            {product.image ? (
-              <Image src={product.image} alt={product.name} fill className="object-contain p-6" sizes="500px" />
-            ) : (
-              <div className="text-8xl opacity-20 select-none">
-                {product.category === "Electronics" ? "⚡" : product.category === "Motors" ? "🔄" : product.category === "Frames" ? "🔩" : product.category === "FPV Equipment" ? "📡" : product.category === "Battery & Charging" ? "🔋" : product.category === "Radio & Receiver" ? "📻" : "🌀"}
+          {/* Image Gallery */}
+          <div className="flex flex-col gap-3">
+            <div className="bg-white rounded-2xl border border-slate-100 flex items-center justify-center relative min-h-72" style={{ height: 320 }}>
+              {activeImg ? (
+                <Image src={activeImg} alt={product.name} fill className="object-contain p-6" sizes="500px" />
+              ) : (
+                <div className="text-8xl opacity-20 select-none">
+                  {product.category === "Electronics" ? "⚡" : product.category === "Motors" ? "🔄" : product.category === "Frames" ? "🔩" : product.category === "FPV Equipment" ? "📡" : product.category === "Battery & Charging" ? "🔋" : product.category === "Radio & Receiver" ? "📻" : "🌀"}
+                </div>
+              )}
+              {discount > 0 && (
+                <span className="absolute top-4 right-4 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full">-{discount}%</span>
+              )}
+            </div>
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {allImages.map((img, i) => (
+                  <button key={i} onClick={() => setActiveImg(img)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden bg-white transition-all ${activeImg === img ? "border-blue-500" : "border-slate-200 hover:border-blue-300"}`}>
+                    <div className="relative w-full h-full">
+                      <Image src={img} alt="" fill className="object-contain p-1" sizes="64px" />
+                    </div>
+                  </button>
+                ))}
               </div>
-            )}
-            {discount > 0 && (
-              <span className="absolute top-4 right-4 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded-full">-{discount}%</span>
             )}
           </div>
 
